@@ -1,0 +1,7 @@
+.venv
+__pycache__/
+.DS_Store
+.*.swp
+/config/*json
+._*
+*test_html

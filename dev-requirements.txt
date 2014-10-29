@@ -1,0 +1,7 @@
+autopep8
+docformatter
+flake8
+ipython
+mccabe
+pep8
+pyflakes
