@@ -1,6 +1,9 @@
 # Tistory
 
-A Python 3 library for interacting with the Tistory REST API.  
+A Python 3 library for interacting with the Tistory RESTful API.  
+
+[Tistory API documentation](http://www.tistory.com/guide/api/index)  
+[Manage applications](http://www.tistory.com/guide/api/manage/list)
 
 ### Dependencies
 
