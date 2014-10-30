@@ -1,6 +1,3 @@
-arrow
 beautifulsoup4
 lxml
-natsort
-python-dateutil
 requests
