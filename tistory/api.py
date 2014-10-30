@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
 
-import os
 import json
 
 import requests
 from bs4 import BeautifulSoup as bs4
-
-# TODO:
-
-# - Add support for uploading via the post/attach endpoint
-# http://www.tistory.com/guide/api/post.php#post-attach
-# -- At the moment, post/attach seems rather broken, or is too difficult for me
-# to implement support for.
 
 
 class TistoryError(Exception):
@@ -31,11 +23,21 @@ class TistoryAPI(object):
 
 class TistoryResponse(object):
 
+    """Response from a Tistory request. Behaves like a dict or BeautifulSoup4
+    object depending on requested format.
+
+    It has the headers attribute and request attribute for accessing the http
+    headers and the TistoryRequest object.
+
+    The attribute status_code returns the status code returned from the
+    Tistory API and the raise_for_status() method raises an TistoryError exception
+    if the status code is not 200.
+
+    """
+
     @property
     def status_code(self):
-        '''
-        Return the status code returned from the API as an integer.
-        '''
+        """Return the status code returned from the API as an integer."""
 
         if self.format == 'xml':
             status_code = self.status.text
@@ -46,13 +48,13 @@ class TistoryResponse(object):
         return status_code
 
     def raise_for_status(self):
-        ''' 
-        Raises an TistoryError exception if the status code returned from the 
-        API is not 200. 
-        The exception will return the original error message, along with a 
-        error type if the error message is known. Otherwise the error type 
+        """
+        Raises an TistoryError exception if the status code returned from the
+        API is not 200.
+        The exception will return the original error message, along with a
+        error type if the error message is known. Otherwise the error type
         "unknown" is returned.
-        '''
+        """
 
         if self.status_code != 200:
             if self.format == 'xml':
@@ -63,27 +65,23 @@ class TistoryResponse(object):
                 error = self._error_handler(error_message)
             raise TistoryError(repr(error))
 
-    def _error_handler(self, text):
-        '''
-        Parses the error message and checks if the error message is a known 
-        one. Otherwise it returns "unknown"
-        '''
+    def _error_handler(self, error_message):
+        """Parses the error message and checks if the error message is a known
+        one.
 
-        error = {}
-        error['text'] = text
-        if 'access_token 이 유효하지 않습니다.' in text:
-            error['type'] = 'access_token'
-        elif '블로그 정보가 없습니다.' in text:
-            error['type'] = 'non_existing'
-        elif '글이 존재하지 않 거나 권한이 없습니다.' in text:
-            error['type'] = 'does_not_exist_or_unauthorized'
-        elif '블로그 정보가 없습니다.' in text:
-            error['type'] = 'does_not_exist'
-        elif '글이 존재하지 않거나, 범위가 유효하지 않습니다.' in text:
-            error['type'] = 'does_not_exist'
-        else:
-            error['type'] = 'unknown'
-        return error
+        Otherwise it returns "unknown"
+
+        """
+
+        errors = {}
+        errors['access_token 이 유효하지 않습니다.'] = 'access_token'
+        errors['블로그 정보가 없습니다.'] = 'does_not_exist'
+        errors['글이 존재하지 않 거나 권한이 없습니다.'] = 'does_not_exist_or_unauthorized'
+        errors['글이 존재하지 않거나, 범위가 유효하지 않습니다.'] = 'does_not_exist'
+
+        for error in errors:
+            if error in error_message:
+                return (error_message, errors[error])
 
 
 class TistoryResponseSoup(bs4, TistoryResponse):
@@ -94,7 +92,15 @@ class TistoryResponseDict(dict, TistoryResponse):
     pass
 
 
-def wrap_tistory_request(request, format):
+def _wrap_tistory_request(request, format):
+    """Wrap the response from the Tistory API in either a dictionary or a
+    BeautifulSoup4 object depending on the format.
+
+    Returned along with the dict/bs4-object is the TistoryRequest object
+    and HTTP headers in the request and headers attributes.
+
+    """
+
     if format == 'xml':
         response = TistoryResponseSoup(request.bytes, features="xml")
     elif format == 'json':
@@ -110,8 +116,8 @@ def wrap_tistory_request(request, format):
 
 class TistoryClassCall(TistoryAPI):
 
-    ''' A helper class intended for being used as a mapper to the Tistory
-    RESTful API. '''
+    """A helper class intended for being used as a mapper to the Tistory
+    RESTful API."""
 
     def __init__(
             self,
@@ -149,16 +155,17 @@ class TistoryClassCall(TistoryAPI):
                              url=url,
                              params=params,
                              format=self.format)
-        response_wrapper = wrap_tistory_request(req, self.format)
+        response_wrapper = _wrap_tistory_request(req, self.format)
         return response_wrapper
 
 
 class TistoryRequest(TistoryAPI):
 
-    ''' The class responsible for doing the actual request to the Tistory API.
-    '''
+    """The class responsible for doing the actual request to the Tistory
+    API."""
 
     def __init__(self, access_token, url, params, format):
+        """"""
         self.access_token = access_token
         self.url = url
         self.params = params
@@ -180,6 +187,7 @@ class TistoryRequest(TistoryAPI):
 
     @property
     def payload(self):
+        """"""
         payload = self.params
         # Add/overwrite the access token and selected format to/in the payload
         payload['access_token'] = self.access_token
@@ -204,7 +212,11 @@ class TistoryRequest(TistoryAPI):
 
 class Tistory(TistoryClassCall):
 
+    """"""
+
     def __init__(self, access_token=None, format='xml'):
+        """"""
+
         self.access_token = access_token
 
         if not access_token:
