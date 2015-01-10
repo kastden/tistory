@@ -4,7 +4,7 @@ import json
 import os
 from shlex import quote as shlex_quote
 
-from tistory.api import Tistory
+from tistory.api import Tistory, TistoryError
 from tistory.auth import TistoryOAuth2
 
 def load_config(fname):
