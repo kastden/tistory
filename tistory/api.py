@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import json
+import mimetypes
+import os.path
 
 import requests
 from bs4 import BeautifulSoup as bs4
@@ -147,7 +149,8 @@ class TistoryClassCall(object):
             callable_cls,
             access_token,
             uriparts=None,
-            format='xml'):
+            format='xml',
+            file=False):
         self.callable_cls = callable_cls
         self.access_token = access_token
         if not uriparts:
@@ -155,6 +158,7 @@ class TistoryClassCall(object):
         else:
             self.uriparts = uriparts
         self.format = format
+        self.file = False
 
     def __getattr__(self, k):
         # Return a initialized instance of the callable_class, with the
@@ -162,9 +166,10 @@ class TistoryClassCall(object):
         return self.callable_cls(callable_cls=self.callable_cls,
                                  access_token=self.access_token,
                                  uriparts=self.uriparts + (k,),
-                                 format=self.format)
+                                 format=self.format,
+                                 file=self.file)
 
-    def __call__(self, **kwargs):
+    def __call__(self, file=None, **kwargs):
         # Create a params dictionary that TistoryRequest._get() will later
         # build on.
         params = {}
@@ -174,7 +179,8 @@ class TistoryClassCall(object):
         req = TistoryRequest(access_token=self.access_token,
                              uriparts=self.uriparts,
                              params=params,
-                             format=self.format)
+                             format=self.format,
+                             file=file)
         response_wrapper = _wrap_tistory_request(req, self.format)
         return response_wrapper
 
@@ -191,7 +197,7 @@ class TistoryRequest(object):
     """The class responsible for doing the actual request to the Tistory
     API."""
 
-    def __init__(self, access_token, uriparts, params, format):
+    def __init__(self, access_token, uriparts, params, format, file=None):
         """"""
         self.access_token = access_token
         self.uriparts = uriparts
@@ -201,9 +207,10 @@ class TistoryRequest(object):
         self.url = self.API_BASEURL + '/'.join(self.uriparts)
         self.params = params
         self.format = format
+        self.file = file
 
         # Do the request to the API.
-        self._get()
+        self._post()
 
     @property
     def payload(self):
@@ -215,10 +222,22 @@ class TistoryRequest(object):
 
         return payload
 
-    def _get(self):
+    def _post(self):
 
         # Do the request to the API
-        self.request = requests.post(self.url, data=self.payload)
+        if self.file:
+            abspath = os.path.abspath(self.file)
+            filename = os.path.basename(abspath)
+            mimetype = mimetypes.guess_type(filename)
+
+            with open(filename, 'rb') as f:
+                data = {'uploadedfile': (filename, f, mimetype)}
+                self.request = requests.post(self.url,
+                                             files=data,
+                                             data=self.payload)
+        else:
+            self.request = requests.post(self.url, data=self.payload)
+
         self.request.raise_for_status()
 
         self.headers = self.request.headers
@@ -251,7 +270,8 @@ class Tistory(TistoryClassCall):
                                   callable_cls=TistoryClassCall,
                                   access_token=self.access_token,
                                   format=format,
-                                  uriparts=uriparts)
+                                  uriparts=uriparts,
+                                  file=False)
 
 if __name__ == "__main__":
     pass
