@@ -34,11 +34,13 @@ class TistoryError(Exception):
 
         """
 
-        errors = {}
-        errors['access_token 이 유효하지 않습니다.'] = 'access_token'
-        errors['블로그 정보가 없습니다.'] = 'does_not_exist'
-        errors['글이 존재하지 않 거나 권한이 없습니다.'] = 'does_not_exist_or_unauthorized'
-        errors['글이 존재하지 않거나, 범위가 유효하지 않습니다.'] = 'does_not_exist'
+        errors = {'access_token 이 유효하지 않습니다.': 'access_token',
+                  '블로그 정보가 없습니다.': 'does_not_exist',
+                  '글이 존재하지 않 거나 권한이 없습니다.': 'does_not_exist_or_unauthorized',
+                  '글이 존재하지 않거나, 범위가 유효하지 않습니다.': 'does_not_exist',
+                  '필수 Parameter 또는 Request method 가 올바르지 않습니다.': 'incorrect_parameter_or_request_method',
+                  '이미지만 업로드가 가능합니다.': 'not_a_image',
+                  }
 
         for error in errors:
             if error in error_message:
