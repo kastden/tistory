@@ -118,7 +118,7 @@ class TistoryResponseDict(dict, TistoryResponse):
         super().__init__(data)
 
 
-def _wrap_tistory_request(request, format):
+def _wrap_tistory_request(request):
     """Wrap the response from the Tistory API in either a dictionary or a
     BeautifulSoup4 object depending on the format.
 
@@ -128,14 +128,14 @@ def _wrap_tistory_request(request, format):
 
     """
 
-    if format == 'xml':
+    if request.format == 'xml':
         response = TistoryResponseSoup(request.content, features="xml")
-    elif format == 'json':
+    elif request.format == 'json':
         response = TistoryResponseDict(request.text)
 
     response.request = request
     response.uriparts = request.uriparts
-    response.format = format
+    response.format = request.format
     response.headers = request.headers
 
     return response
@@ -183,7 +183,7 @@ class TistoryClassCall(object):
                              params=params,
                              format=self.format,
                              file=file)
-        response_wrapper = _wrap_tistory_request(req, self.format)
+        response_wrapper = _wrap_tistory_request(req)
         return response_wrapper
 
 
