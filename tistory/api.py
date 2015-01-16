@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup as bs4
 
 class TistoryError(Exception):
 
-    """Base Exception thrown if there is a problem interacting with the
+    """Exception thrown if there is a problem interacting with the
     Tistory API.
 
     Attributes:
@@ -34,13 +34,14 @@ class TistoryError(Exception):
 
         """
 
-        errors = {'access_token 이 유효하지 않습니다.': 'access_token',
-                  '블로그 정보가 없습니다.': 'does_not_exist',
-                  '글이 존재하지 않 거나 권한이 없습니다.': 'does_not_exist_or_unauthorized',
-                  '글이 존재하지 않거나, 범위가 유효하지 않습니다.': 'does_not_exist',
-                  '필수 Parameter 또는 Request method 가 올바르지 않습니다.': 'incorrect_parameter_or_request_method',
-                  '이미지만 업로드가 가능합니다.': 'not_a_image',
-                  }
+        errors = {
+            'access_token 이 유효하지 않습니다.': 'access_token',
+            '블로그 정보가 없습니다.': 'does_not_exist',
+            '글이 존재하지 않 거나 권한이 없습니다.': 'does_not_exist_or_unauthorized',
+            '글이 존재하지 않거나, 범위가 유효하지 않습니다.': 'does_not_exist',
+            '필수 Parameter 또는 Request method 가 올바르지 않습니다.': 'incorrect_parameter_or_request_method',
+            '이미지만 업로드가 가능합니다.': 'not_a_image',
+        }
 
         for error in errors:
             if error in error_message:
@@ -69,7 +70,7 @@ class TistoryResponse(object):
         sent to, i.e. ('post', 'read').
 
     The attribute status_code returns the status code returned from the
-    Tistory API and the raise_for_status() method throws an TistoryError exception
+    Tistory API and the _raise_for_status() method throws an TistoryError exception
     if the status code is not 200.
 
     """
@@ -91,7 +92,7 @@ class TistoryResponse(object):
         status_code = int(status_code)
         return status_code
 
-    def raise_for_status(self):
+    def _raise_for_status(self):
         """
         Throws an TistoryError exception if the status code returned from the
         API is not 200.
@@ -183,8 +184,9 @@ class TistoryClassCall(object):
                              params=params,
                              format=self.format,
                              file=file)
-        response_wrapper = _wrap_tistory_request(req)
-        return response_wrapper
+        response = _wrap_tistory_request(req)
+        response._raise_for_status()
+        return response
 
 
 class TistoryRequest(object):
